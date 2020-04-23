@@ -136,7 +136,6 @@ func (s *AdmissionServer) getContainerPatch(pod v1.Pod, i int, annotationsPerCon
 	}
 
 	patches, annotations = appendPatchesAndAnnotations(patches, annotations, pod.Spec.Containers[i].Resources.Requests, i, containerResources.Requests, "requests", "request")
-	patches, annotations = appendPatchesAndAnnotations(patches, annotations, pod.Spec.Containers[i].Resources.Limits, i, containerResources.Limits, "limits", "limit")
 
 	updatesAnnotation := fmt.Sprintf("container %d: ", i) + strings.Join(annotations, ", ")
 	return patches, updatesAnnotation

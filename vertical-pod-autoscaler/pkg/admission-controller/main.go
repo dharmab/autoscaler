@@ -82,7 +82,11 @@ func main() {
 	podPreprocessor := logic.NewDefaultPodPreProcessor()
 	vpaPreprocessor := logic.NewDefaultVpaPreProcessor()
 	var limitRangeCalculator limitrange.LimitRangeCalculator
-	limitRangeCalculator = limitrange.NewNoopLimitsCalculator()
+	limitRangeCalculator, err = limitrange.NewLimitsRangeCalculator(factory)
+	if err != nil {
+		klog.Errorf("Failed to create limitRangeCalculator, falling back to not checking limits. Error message: %s", err)
+		limitRangeCalculator = limitrange.NewNoopLimitsCalculator()
+	}
 	recommendationProvider := logic.NewRecommendationProvider(limitRangeCalculator, vpa_api_util.NewCappingRecommendationProcessor(limitRangeCalculator), targetSelectorFetcher, vpaLister)
 
 	as := logic.NewAdmissionServer(recommendationProvider, podPreprocessor, vpaPreprocessor, limitRangeCalculator)
