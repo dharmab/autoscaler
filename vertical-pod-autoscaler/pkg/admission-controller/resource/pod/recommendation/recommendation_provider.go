@@ -56,17 +56,6 @@ func GetContainersResources(pod *core.Pod, podRecommendation vpa_types.Recommend
 			continue
 		}
 		resources[i].Requests = recommendation.Target
-		defaultLimit := core.ResourceList{}
-		if limitRange != nil {
-			defaultLimit = limitRange.Default
-		}
-		proportionalLimits, limitAnnotations := vpa_api_util.GetProportionalLimit(container.Resources.Limits, container.Resources.Requests, recommendation.Target, defaultLimit)
-		if proportionalLimits != nil {
-			resources[i].Limits = proportionalLimits
-			if len(limitAnnotations) > 0 {
-				annotations[container.Name] = append(annotations[container.Name], limitAnnotations...)
-			}
-		}
 	}
 	return resources
 }

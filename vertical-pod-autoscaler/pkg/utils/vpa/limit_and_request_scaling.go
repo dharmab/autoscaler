@@ -90,21 +90,13 @@ func getProportionalResourceLimit(resourceName core.ResourceName, originalLimit,
 }
 
 // GetBoundaryRequest returns the boundary (min/max) request that can be specified with
-// preserving the original limit to request ratio. Returns nil if no boundary exists
+// preserving the original limit. Returns nil if no boundary exists
 func GetBoundaryRequest(originalRequest, originalLimit, boundaryLimit, defaultLimit *resource.Quantity) *resource.Quantity {
-	if originalLimit == nil || originalLimit.Value() == 0 && defaultLimit != nil {
-		originalLimit = defaultLimit
-	}
 	// originalLimit not set, no boundary
 	if originalLimit == nil || originalLimit.Value() == 0 {
 		return nil
 	}
-	// originalLimit set but originalRequest not set - K8s will treat the pod as if they were equal
-	if originalRequest == nil || originalRequest.Value() == 0 {
-		return boundaryLimit
-	}
-	result, _ := scaleQuantityProportionally(originalRequest /* scaledQuantity */, originalLimit /*scaleBase*/, boundaryLimit /*scaleResult*/)
-	return result
+	return originalLimit
 }
 
 // scaleQuantityProportionally returns value which has the same proportion to scaledQuantity as scaleResult has to scaleBase
