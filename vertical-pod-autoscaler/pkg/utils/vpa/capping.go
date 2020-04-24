@@ -106,7 +106,7 @@ func CapRequestToLimit(requests apiv1.ResourceList, container apiv1.Container) {
 	if !cpuLimit.IsZero() && requests.Cpu().Cmp(cpuLimit) > 0 {
 		requests[apiv1.ResourceCPU] = cpuLimit
 	}
-	if !cpuLimit.IsZero() && requests.Memory().Cmp(memoryLimit) > 0 {
+	if !memoryLimit.IsZero() && requests.Memory().Cmp(memoryLimit) > 0 {
 		requests[apiv1.ResourceMemory] = memoryLimit
 	}
 }
