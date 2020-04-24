@@ -121,6 +121,12 @@ func getCappedRecommendationForContainer(
 			cappingAnnotations = append(cappingAnnotations, limitAnnotations...)
 			cappingAnnotations = append(cappingAnnotations, annotations...)
 		}
+		if recommendation.Cpu().Cmp(*container.Resources.Limits.Cpu()) > 0 {
+			recommendation[apiv1.ResourceCPU] = *container.Resources.Limits.Cpu()
+		}
+		if recommendation.Memory().Cmp(*container.Resources.Limits.Memory()) > 0 {
+			recommendation[apiv1.ResourceMemory] = *container.Resources.Limits.Memory()
+		}
 	}
 
 	process(cappedRecommendations.Target, true)

@@ -17,8 +17,6 @@ limitations under the License.
 package recommendation
 
 import (
-	"fmt"
-
 	core "k8s.io/api/core/v1"
 	vpa_types "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1"
 	"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/utils/limitrange"
@@ -46,8 +44,7 @@ func NewProvider(calculator limitrange.LimitRangeCalculator,
 }
 
 // GetContainersResources returns the recommended resources for each container in the given pod in the same order they are specified in the pod.Spec.
-func GetContainersResources(pod *core.Pod, podRecommendation vpa_types.RecommendedPodResources, limitRange *core.LimitRangeItem,
-	annotations vpa_api_util.ContainerToAnnotationsMap) []vpa_api_util.ContainerResources {
+func GetContainersResources(pod *core.Pod, podRecommendation vpa_types.RecommendedPodResources) []vpa_api_util.ContainerResources {
 	resources := make([]vpa_api_util.ContainerResources, len(pod.Spec.Containers))
 	for i, container := range pod.Spec.Containers {
 		recommendation := vpa_api_util.GetRecommendationForContainer(container.Name, &podRecommendation)
@@ -56,16 +53,11 @@ func GetContainersResources(pod *core.Pod, podRecommendation vpa_types.Recommend
 			continue
 		}
 		resources[i].Requests = recommendation.Target
-		defaultLimit := core.ResourceList{}
-		if limitRange != nil {
-			defaultLimit = limitRange.Default
+		if resources[i].Requests.Cpu().Cmp(*container.Resources.Limits.Cpu()) > 0 {
+			resources[i].Requests[core.ResourceCPU] = *container.Resources.Limits.Cpu()
 		}
-		proportionalLimits, limitAnnotations := vpa_api_util.GetProportionalLimit(container.Resources.Limits, container.Resources.Requests, recommendation.Target, defaultLimit)
-		if proportionalLimits != nil {
-			resources[i].Limits = proportionalLimits
-			if len(limitAnnotations) > 0 {
-				annotations[container.Name] = append(annotations[container.Name], limitAnnotations...)
-			}
+		if resources[i].Requests.Memory().Cmp(*container.Resources.Limits.Memory()) > 0 {
+			resources[i].Requests[core.ResourceMemory] = *container.Resources.Limits.Memory()
 		}
 	}
 	return resources
@@ -91,10 +83,6 @@ func (p *recommendationProvider) GetContainersResourcesForPod(pod *core.Pod, vpa
 			return nil, annotations, err
 		}
 	}
-	containerLimitRange, err := p.limitsRangeCalculator.GetContainerLimitRangeItem(pod.Namespace)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error getting containerLimitRange: %s", err)
-	}
-	containerResources := GetContainersResources(pod, *recommendedPodResources, containerLimitRange, annotations)
+	containerResources := GetContainersResources(pod, *recommendedPodResources)
 	return containerResources, annotations, nil
 }
