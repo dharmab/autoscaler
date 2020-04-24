@@ -53,12 +53,7 @@ func GetContainersResources(pod *core.Pod, podRecommendation vpa_types.Recommend
 			continue
 		}
 		resources[i].Requests = recommendation.Target
-		if resources[i].Requests.Cpu().Cmp(*container.Resources.Limits.Cpu()) > 0 {
-			resources[i].Requests[core.ResourceCPU] = *container.Resources.Limits.Cpu()
-		}
-		if resources[i].Requests.Memory().Cmp(*container.Resources.Limits.Memory()) > 0 {
-			resources[i].Requests[core.ResourceMemory] = *container.Resources.Limits.Memory()
-		}
+		vpa_api_util.CapRequestToLimit(resources[i].Requests, container)
 	}
 	return resources
 }

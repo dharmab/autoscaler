@@ -98,6 +98,19 @@ func (c *cappingRecommendationProcessor) Apply(
 	return &vpa_types.RecommendedPodResources{ContainerRecommendations: updatedRecommendations}, containerToAnnotationsMap, nil
 }
 
+// CapRequestToLimit clamps the given request to the container's CPU and memory limit.
+func CapRequestToLimit(requests apiv1.ResourceList, container apiv1.Container) {
+	cpuLimit := *container.Resources.Limits.Cpu()
+	memoryLimit := *container.Resources.Limits.Memory()
+
+	if !cpuLimit.IsZero() && requests.Cpu().Cmp(cpuLimit) > 0 {
+		requests[apiv1.ResourceCPU] = cpuLimit
+	}
+	if !cpuLimit.IsZero() && requests.Memory().Cmp(memoryLimit) > 0 {
+		requests[apiv1.ResourceMemory] = memoryLimit
+	}
+}
+
 // getCappedRecommendationForContainer returns a recommendation for the given container, adjusted to obey policy and limits.
 func getCappedRecommendationForContainer(
 	container apiv1.Container,
@@ -121,12 +134,7 @@ func getCappedRecommendationForContainer(
 			cappingAnnotations = append(cappingAnnotations, limitAnnotations...)
 			cappingAnnotations = append(cappingAnnotations, annotations...)
 		}
-		if recommendation.Cpu().Cmp(*container.Resources.Limits.Cpu()) > 0 {
-			recommendation[apiv1.ResourceCPU] = *container.Resources.Limits.Cpu()
-		}
-		if recommendation.Memory().Cmp(*container.Resources.Limits.Memory()) > 0 {
-			recommendation[apiv1.ResourceMemory] = *container.Resources.Limits.Memory()
-		}
+		CapRequestToLimit(recommendation, container)
 	}
 
 	process(cappedRecommendations.Target, true)
