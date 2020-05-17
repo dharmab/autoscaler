@@ -41,7 +41,7 @@ import (
 
 var (
 	defaultVmssSizeRefreshPeriod = 15 * time.Second
-	vmssInstancesRefreshPeriod   = 5 * time.Minute
+	vmssInstancesRefreshPeriod   = 15 * time.Minute
 	vmssSizeMutex                sync.Mutex
 )
 
